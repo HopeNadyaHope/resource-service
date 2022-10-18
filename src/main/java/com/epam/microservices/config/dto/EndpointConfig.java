@@ -1,4 +1,4 @@
-package com.epam.microservices.config;
+package com.epam.microservices.config.dto;
 
 public class EndpointConfig {
     private String endpoint;

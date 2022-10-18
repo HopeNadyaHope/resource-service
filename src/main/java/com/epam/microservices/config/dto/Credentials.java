@@ -1,7 +1,6 @@
-package com.epam.microservices.config;
+package com.epam.microservices.config.dto;
 
 public class Credentials {
-
   private String accessKey;
   private String secretKey;
 
