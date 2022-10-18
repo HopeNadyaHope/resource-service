@@ -6,12 +6,16 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.epam.microservices.config.dto.Credentials;
+import com.epam.microservices.config.dto.EndpointConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 @Configuration
+@EnableRetry
 public class Config {
     @Bean
     @ConfigurationProperties(prefix = "aws.credentials")

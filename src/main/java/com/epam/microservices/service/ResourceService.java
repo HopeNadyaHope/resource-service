@@ -35,9 +35,9 @@ public class ResourceService {
         fileEntity.setContentType(FilenameUtils.getExtension(file.getOriginalFilename()));
 
         try {
+            repository.create(fileEntity);
             s3.putObject(BUCKET_NAME, String.valueOf(fileEntity.getId()),
                     file.getInputStream(), getUploadObjectMetadata(file));
-            repository.create(fileEntity);
         } catch (Exception e) {
             throw new UnableToSaveFileException();
         }

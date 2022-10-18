@@ -1,5 +1,6 @@
 package com.epam.microservices.controller;
 
+import com.epam.microservices.service.RabbitMQSender;
 import com.epam.microservices.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,15 @@ public class ResourceController {
     private static final String RANGE_SEPARATOR = "( - )";
     @Autowired
     private ResourceService service;
+    @Autowired
+    private RabbitMQSender rabbitMQSender;
 
     @PostMapping(produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public @ResponseBody Map<String, Integer> create(@RequestParam("file") MultipartFile file) {
-        return Map.of(ID, service.create(file));
+        int createdResourceId = service.create(file);
+        rabbitMQSender.sendUploadedResourceId(createdResourceId);
+        return Map.of(ID, createdResourceId);
     }
 
     @GetMapping(value = "/{id}")
