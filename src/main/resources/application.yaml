@@ -18,6 +18,9 @@ spring:
     username: guest
     password: guest
 
+  application:
+    name: resource-service
+
 aws:
   credentials:
     accessKey: ${ACCESS_KEY}
@@ -27,4 +30,19 @@ aws:
     region: ${S3_REGION}
 
 server:
-  port: 8080
+  port: 8088
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    preferIpAddress: true
+
+
+logging:
+  level:
+    com:
+      netflix:
+        eureka: OFF
+        discovery: OFF
