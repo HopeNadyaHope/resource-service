@@ -24,6 +24,6 @@ public class ResourceRepository {
 
     @Transactional
     public void delete(FileEntity fileEntity) {
-        entityManager.remove(fileEntity);
+        entityManager.remove(entityManager.contains(fileEntity) ? fileEntity : entityManager.merge(fileEntity));
     }
 }

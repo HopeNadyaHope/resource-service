@@ -45,20 +45,11 @@ public class ResourceService {
         return fileEntity.getId();
     }
 
-    private ObjectMetadata getUploadObjectMetadata(MultipartFile file) {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setLastModified(Date.from(Instant.now()));
-        objectMetadata.setContentType(file.getContentType());
-        objectMetadata.setContentLength(file.getSize());
-        return objectMetadata;
-    }
-
-    public byte[] getFileBytes(int id) {
+    public byte[] getFileBytes(Integer id) {
         return repository.read(id)
                 .map(fileEntity1 -> getFileBytesFromResource(id))
                 .orElseThrow(() -> new ObjectNotFoundException(id, FileEntity.class.getName()));
     }
-
 
     public byte[] getFileBytes(Integer id, List<Integer> range) {
         byte[] bytes = getFileBytes(id);
@@ -83,6 +74,14 @@ public class ResourceService {
             }
         });
         return deletedIds;
+    }
+
+    private ObjectMetadata getUploadObjectMetadata(MultipartFile file) {
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setLastModified(Date.from(Instant.now()));
+        objectMetadata.setContentType(file.getContentType());
+        objectMetadata.setContentLength(file.getSize());
+        return objectMetadata;
     }
 
     private byte[] getFileBytesFromResource(int id) {
