@@ -7,10 +7,10 @@ import com.epam.microservices.entity.FileEntity;
 import com.epam.microservices.repository.ResourceRepository;
 import com.epam.microservices.service.exception.IncorrectRangeException;
 import com.epam.microservices.service.exception.ResourceCantBeReachedException;
+import com.epam.microservices.service.exception.ResourceNotFoundException;
 import com.epam.microservices.service.exception.UnableToSaveFileException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,26 +39,17 @@ public class ResourceService {
             s3.putObject(BUCKET_NAME, String.valueOf(fileEntity.getId()),
                     file.getInputStream(), getUploadObjectMetadata(file));
         } catch (Exception e) {
-            throw new UnableToSaveFileException();
+            throw new UnableToSaveFileException(e);
         }
 
         return fileEntity.getId();
     }
 
-    private ObjectMetadata getUploadObjectMetadata(MultipartFile file) {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setLastModified(Date.from(Instant.now()));
-        objectMetadata.setContentType(file.getContentType());
-        objectMetadata.setContentLength(file.getSize());
-        return objectMetadata;
-    }
-
-    public byte[] getFileBytes(int id) {
+    public byte[] getFileBytes(Integer id) {
         return repository.read(id)
                 .map(fileEntity1 -> getFileBytesFromResource(id))
-                .orElseThrow(() -> new ObjectNotFoundException(id, FileEntity.class.getName()));
+                .orElseThrow(() -> new ResourceNotFoundException(id));
     }
-
 
     public byte[] getFileBytes(Integer id, List<Integer> range) {
         byte[] bytes = getFileBytes(id);
@@ -83,6 +74,14 @@ public class ResourceService {
             }
         });
         return deletedIds;
+    }
+
+    private ObjectMetadata getUploadObjectMetadata(MultipartFile file) {
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setLastModified(Date.from(Instant.now()));
+        objectMetadata.setContentType(file.getContentType());
+        objectMetadata.setContentLength(file.getSize());
+        return objectMetadata;
     }
 
     private byte[] getFileBytesFromResource(int id) {

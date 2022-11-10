@@ -28,8 +28,15 @@ dependencies {
     implementation "commons-fileupload:commons-fileupload:${commons_fileupload_version}"
     implementation "commons-io:commons-io:${commons_io_version}"
 
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junit_version}"
+    testCompileOnly "org.junit.jupiter:junit-jupiter-params:${junit_version}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junit_version}"
+    testImplementation "org.mockito:mockito-core:${mockito_version}"
+    testImplementation "com.h2database:h2:${h2_version}"
+    testImplementation("org.flywaydb:flyway-core:${flyway_version}") {
+        exclude group: 'org.slf4j'
+    }
 }
 
 test {
