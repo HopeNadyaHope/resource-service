@@ -2,8 +2,8 @@ package com.epam.microservices.controller.exception;
 
 import com.epam.microservices.service.exception.IncorrectRangeException;
 import com.epam.microservices.service.exception.ResourceCantBeReachedException;
+import com.epam.microservices.service.exception.ResourceNotFoundException;
 import com.epam.microservices.service.exception.UnableToSaveFileException;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ErrorHandler {
     private static final String ERROR_PROCESSING_REQUEST = "There was an error processing the request";
 
-    @ExceptionHandler(ObjectNotFoundException.class)
+    @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public @ResponseBody ApiError objectNotFoundException(ObjectNotFoundException e) {
+    public @ResponseBody ApiError resourceNotFoundException(ResourceNotFoundException e) {
         return new ApiError(HttpStatus.NOT_FOUND,
                 e.getMessage());
     }

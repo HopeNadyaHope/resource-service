@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.epam.microservices.entity.FileEntity;
 import com.epam.microservices.repository.ResourceRepository;
 import com.epam.microservices.service.exception.IncorrectRangeException;
+import com.epam.microservices.service.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -150,6 +151,18 @@ class ResourceServiceTest {
         verifyNoMoreInteractions(repository);
         verify(s3).getObject(anyString(), eq(String.valueOf(id)));
         verifyNoMoreInteractions(s3);
+    }
+
+    @Test
+    void testGetFileBytesWithResourceNotFoundException() {
+        int id = 3;
+
+        when(repository.read(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.getFileBytes(id));
+        verify(repository).read(id);
+        verifyNoMoreInteractions(repository);
+        verifyNoInteractions(s3);
     }
 
     @Test
