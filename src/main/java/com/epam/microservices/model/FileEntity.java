@@ -1,4 +1,4 @@
-package com.epam.microservices.entity;
+package com.epam.microservices.model;
 
 import javax.persistence.*;
 
@@ -12,6 +12,8 @@ public class FileEntity {
     private int id;
     @Column(name="content_type")
     private String contentType;
+
+    private String bucket;
 
     public int getId() {
         return id;
@@ -27,5 +29,13 @@ public class FileEntity {
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public String getBucket() {
+        return bucket;
+    }
+
+    public void setBucket(String bucket) {
+        this.bucket = bucket;
     }
 }

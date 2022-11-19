@@ -1,6 +1,6 @@
 package com.epam.microservices.repository;
 
-import com.epam.microservices.entity.FileEntity;
+import com.epam.microservices.model.FileEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,5 +25,10 @@ public class ResourceRepository {
     @Transactional
     public void delete(FileEntity fileEntity) {
         entityManager.remove(entityManager.contains(fileEntity) ? fileEntity : entityManager.merge(fileEntity));
+    }
+
+    @Transactional
+    public void update(FileEntity fileEntity){
+        entityManager.merge(fileEntity);
     }
 }
