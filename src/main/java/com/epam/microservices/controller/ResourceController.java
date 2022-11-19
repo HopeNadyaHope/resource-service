@@ -61,4 +61,10 @@ public class ResourceController {
         return Map.of(ID, service.delete(ids));
     }
 
+    @GetMapping(value = "/permanent/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void permanentResource(@PathVariable(name = "id") Integer id) {
+        service.permanentResource(id);
+    }
+
 }

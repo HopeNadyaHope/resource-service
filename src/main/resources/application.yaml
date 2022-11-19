@@ -21,6 +21,10 @@ spring:
   application:
     name: resource-service
 
+  cloud:
+    config:
+      enabled: false
+
 aws:
   credentials:
     accessKey: ${ACCESS_KEY}
@@ -34,6 +38,9 @@ server:
 
 eureka:
   client:
+    client:
+      enabled: true
+      fetch-registry: true
     serviceUrl:
       defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
   instance:
