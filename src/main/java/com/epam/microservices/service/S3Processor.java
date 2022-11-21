@@ -20,16 +20,16 @@ public class S3Processor {
     @Autowired
     private AmazonS3 s3;
 
-    public void putResource(MultipartFile file, int fileEntityId, String bucket) {
+    public void putResource(MultipartFile file, String bucket, Integer resourceId) {
         try {
-            s3.putObject(bucket, String.valueOf(fileEntityId),
+            s3.putObject(bucket, String.valueOf(resourceId),
                     file.getInputStream(), getUploadObjectMetadata(file));
         } catch (Exception e) {
             throw new UnableToSaveFileException(e);
         }
     }
 
-    public byte[] getFileBytesFromResource(String bucket, int id) {
+    public byte[] getFileBytesFromResource(String bucket, Integer id) {
         S3Object s3object = s3.getObject(bucket, String.valueOf(id));
         try {
             return IOUtils.toByteArray(s3object.getObjectContent());
@@ -38,13 +38,14 @@ public class S3Processor {
         }
     }
 
-    public void deleteResource(Integer resourceId, String bucket) {
+    public void deleteResource(String bucket, Integer resourceId) {
         s3.deleteObject(bucket, String.valueOf(resourceId));
     }
 
-    public void transferResource(String resourceId, String originBucket, String destinationBucket) {
-        s3.copyObject(originBucket, resourceId, destinationBucket, resourceId);
-        s3.deleteObject(originBucket, resourceId);
+    public void transferResource(String originBucket, String destinationBucket, Integer resourceId) {
+        String key = String.valueOf(resourceId);
+        s3.copyObject(originBucket, key, destinationBucket, key);
+        s3.deleteObject(originBucket, key);
     }
 
     private ObjectMetadata getUploadObjectMetadata(MultipartFile file) {
