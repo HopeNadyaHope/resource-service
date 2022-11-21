@@ -53,3 +53,28 @@ logging:
       netflix:
         eureka: OFF
         discovery: OFF
+
+resilience4j.circuitbreaker:
+  instances:
+    storageServiceCallCB:
+      registerHealthIndicator: true
+      slidingWindowSize: 10
+      slidingWindowType: COUNT_BASED
+      permittedNumberOfCallsInHalfOpenState: 4
+      minimumNumberOfCalls: 10
+      waitDurationInOpenState: 5s
+      slowCallRateThreshold: 50
+      slowCallDurationThreshold: 10
+      failureRateThreshold: 50
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

@@ -1,6 +1,7 @@
 package com.epam.microservices.model;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "file")
@@ -37,5 +38,18 @@ public class FileEntity {
 
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileEntity that = (FileEntity) o;
+        return id == that.id && contentType.equals(that.contentType) && bucket.equals(that.bucket);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, contentType, bucket);
     }
 }
