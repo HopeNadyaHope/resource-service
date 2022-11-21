@@ -1,6 +1,6 @@
 package com.epam.microservices.repository;
 
-import com.epam.microservices.entity.FileEntity;
+import com.epam.microservices.model.FileEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,20 +19,24 @@ class ResourceRepositoryTest {
     void testCreate() {
         int id = 3;
         String contentType = "mp3";
+        String bucket = "staging-bucket";
 
         FileEntity fileEntity = new FileEntity();
         fileEntity.setContentType(contentType);
+        fileEntity.setBucket(bucket);
 
         repository.create(fileEntity);
 
         assertEquals(id, fileEntity.getId());
         assertEquals(contentType, fileEntity.getContentType());
+        assertEquals(bucket, fileEntity.getBucket());
     }
 
     @Test
     void testRead() {
         int id = 1;
         String contentType = "mp3";
+        String bucket = "permanent-bucket";
 
         Optional<FileEntity> fileEntityOptional = repository.read(id);
 
@@ -40,6 +44,7 @@ class ResourceRepositoryTest {
         FileEntity fileEntity = fileEntityOptional.get();
         assertEquals(id, fileEntity.getId());
         assertEquals(contentType, fileEntity.getContentType());
+        assertEquals(bucket, fileEntity.getBucket());
     }
 
     @Test
