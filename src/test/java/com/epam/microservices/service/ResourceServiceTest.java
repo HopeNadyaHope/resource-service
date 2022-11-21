@@ -1,10 +1,6 @@
 package com.epam.microservices.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectResult;
-import com.amazonaws.services.s3.model.S3Object;
-import com.epam.microservices.entity.FileEntity;
+import com.epam.microservices.model.FileEntity;
 import com.epam.microservices.repository.ResourceRepository;
 import com.epam.microservices.service.exception.IncorrectRangeException;
 import com.epam.microservices.service.exception.ResourceNotFoundException;
@@ -19,13 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static com.epam.microservices.service.constant.StorageType.PERMANENT;
+import static com.epam.microservices.service.constant.StorageType.STAGING;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -34,21 +29,20 @@ class ResourceServiceTest {
     @MockBean
     private ResourceRepository repository;
     @MockBean
-    private AmazonS3 s3;
+    private S3Processor s3Processor;
+    @MockBean
+    private BucketNameGetter bucketNameGetter;
     @InjectMocks
     private ResourceService service;
 
     @Test
-    void testCreate() throws IOException {
+    void testCreate() {
         MultipartFile file = mock(MultipartFile.class);
         int id = 3;
+        String bucket = "staging-bucket";
 
-        when(file.getOriginalFilename()).thenReturn("music.mp3");
-        when(file.getContentType()).thenReturn("audio/mp3");
-        when(file.getSize()).thenReturn(64L);
-        when(file.getInputStream()).thenReturn(mock(InputStream.class));
-        when(s3.putObject(anyString(), anyString(), any(InputStream.class), any(ObjectMetadata.class)))
-                .thenReturn(new PutObjectResult());
+        when(bucketNameGetter.getBucketForStorage(STAGING.getValue())).thenReturn(bucket);
+        doNothing().when(s3Processor).putResource(file, bucket, id);
         doAnswer(invocation -> {
             Object[] args = invocation.getArguments();
             ((FileEntity) args[0]).setId(id);
@@ -56,32 +50,31 @@ class ResourceServiceTest {
         }).when(repository).create(any(FileEntity.class));
 
         assertEquals(id, service.create(file));
-        verify(file).getOriginalFilename();
-        verify(file).getContentType();
-        verify(file).getSize();
-        verify(file).getInputStream();
-        verifyNoMoreInteractions(file);
         verify(repository).create(any(FileEntity.class));
         verifyNoMoreInteractions(repository);
-        verify(s3).putObject(anyString(), anyString(), any(InputStream.class), any(ObjectMetadata.class));
-        verifyNoMoreInteractions(s3);
+        verify(bucketNameGetter).getBucketForStorage(STAGING.getValue());
+        verifyNoMoreInteractions(bucketNameGetter);
+        verify(s3Processor).putResource(file, bucket, id);
+        verifyNoMoreInteractions(s3Processor);
     }
 
     @Test
     void testGetFileBytes() {
         int id = 3;
+        String bucket = "bucket";
         byte[] fileBytes = {0, 1, 2};
-        S3Object s3Object = new S3Object();
-        s3Object.setObjectContent(new ByteArrayInputStream(fileBytes));
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setId(id);
+        fileEntity.setBucket(bucket);
 
-        when(repository.read(id)).thenReturn(Optional.of(mock(FileEntity.class)));
-        when(s3.getObject(anyString(), eq(String.valueOf(id)))).thenReturn(s3Object);
+        when(repository.read(id)).thenReturn(Optional.of(fileEntity));
+        when(s3Processor.getFileBytesFromResource(bucket, id)).thenReturn(fileBytes);
 
         assertArrayEquals(fileBytes, service.getFileBytes(id));
         verify(repository).read(id);
         verifyNoMoreInteractions(repository);
-        verify(s3).getObject(anyString(), eq(String.valueOf(id)));
-        verifyNoMoreInteractions(s3);
+        verify(s3Processor).getFileBytesFromResource(bucket, id);
+        verifyNoMoreInteractions(s3Processor);
     }
 
     private static Stream<Arguments> getFileBytesWithRangeTestCases() {
@@ -105,17 +98,19 @@ class ResourceServiceTest {
                                    byte[] fileBytes,
                                    byte[] fileBytesFromRange) {
         int id = 3;
-        S3Object s3Object = new S3Object();
-        s3Object.setObjectContent(new ByteArrayInputStream(fileBytes));
+        String bucket = "bucket";
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setId(id);
+        fileEntity.setBucket(bucket);
 
-        when(repository.read(id)).thenReturn(Optional.of(mock(FileEntity.class)));
-        when(s3.getObject(anyString(), eq(String.valueOf(id)))).thenReturn(s3Object);
+        when(repository.read(id)).thenReturn(Optional.of(fileEntity));
+        when(s3Processor.getFileBytesFromResource(bucket, id)).thenReturn(fileBytes);
 
         assertArrayEquals(fileBytesFromRange, service.getFileBytes(id, range));
         verify(repository).read(id);
         verifyNoMoreInteractions(repository);
-        verify(s3).getObject(anyString(), eq(String.valueOf(id)));
-        verifyNoMoreInteractions(s3);
+        verify(s3Processor).getFileBytesFromResource(bucket, id);
+        verifyNoMoreInteractions(s3Processor);
     }
 
     private static Stream<Arguments> getFileBytesWithRangeExceptionTestCases() {
@@ -140,17 +135,19 @@ class ResourceServiceTest {
                                             List<Integer> range,
                                             byte[] fileBytes) {
         int id = 3;
-        S3Object s3Object = new S3Object();
-        s3Object.setObjectContent(new ByteArrayInputStream(fileBytes));
+        String bucket = "bucket";
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setId(id);
+        fileEntity.setBucket(bucket);
 
-        when(repository.read(id)).thenReturn(Optional.of(mock(FileEntity.class)));
-        when(s3.getObject(anyString(), eq(String.valueOf(id)))).thenReturn(s3Object);
+        when(repository.read(id)).thenReturn(Optional.of(fileEntity));
+        when(s3Processor.getFileBytesFromResource(bucket, id)).thenReturn(fileBytes);
 
         assertThrows(IncorrectRangeException.class, () -> service.getFileBytes(id, range));
         verify(repository).read(id);
         verifyNoMoreInteractions(repository);
-        verify(s3).getObject(anyString(), eq(String.valueOf(id)));
-        verifyNoMoreInteractions(s3);
+        verify(s3Processor).getFileBytesFromResource(bucket, id);
+        verifyNoMoreInteractions(s3Processor);
     }
 
     @Test
@@ -162,7 +159,7 @@ class ResourceServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> service.getFileBytes(id));
         verify(repository).read(id);
         verifyNoMoreInteractions(repository);
-        verifyNoInteractions(s3);
+        verifyNoInteractions(s3Processor);
     }
 
     @Test
@@ -184,26 +181,85 @@ class ResourceServiceTest {
         assertEquals(service.delete(ids), deletesIds);
         verify(repository).read(id);
         verifyNoMoreInteractions(repository);
-        verifyNoInteractions(s3);
+        verifyNoInteractions(s3Processor);
     }
 
     @Test
     void testExistedIds() {
         int id = 1;
+        String bucket = "bucket";
         List<Integer> ids = List.of(id);
         List<Integer> deletesIds = List.of(id);
-        FileEntity fileEntity = mock(FileEntity.class);
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setId(id);
+        fileEntity.setBucket(bucket);
 
         when(repository.read(id)).thenReturn(Optional.of(fileEntity));
-        doNothing().when(s3).deleteObject(anyString(), eq(String.valueOf(id)));
+        doNothing().when(s3Processor).deleteResource(bucket, id);
         doNothing().when(repository).delete(fileEntity);
 
         assertEquals(service.delete(ids), deletesIds);
         verify(repository).read(id);
         verify(repository).delete(fileEntity);
         verifyNoMoreInteractions(repository);
-        verify(s3).deleteObject(anyString(), eq(String.valueOf(id)));
-        verifyNoMoreInteractions(s3);
+        verify(s3Processor).deleteResource(bucket, id);
+        verifyNoMoreInteractions(s3Processor);
     }
 
+    @Test
+    void permanentResourceTest() {
+        int id = 1;
+        String stagingBucket = "staging-bucket";
+        String permanentBucket = "permanent-bucket";
+
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setId(id);
+        fileEntity.setBucket(stagingBucket);
+
+        when(repository.read(id)).thenReturn(Optional.of(fileEntity));
+        when(bucketNameGetter.getBucketForStorage(PERMANENT.getValue())).thenReturn(permanentBucket);
+        doNothing().when(s3Processor).transferResource(stagingBucket, permanentBucket, id);
+        doNothing().when(repository).update(any(FileEntity.class));
+
+        service.permanentResource(id);
+        verify(repository).read(id);
+        verify(repository).update(any(FileEntity.class));
+        verifyNoMoreInteractions(repository);
+        verify(bucketNameGetter).getBucketForStorage(PERMANENT.getValue());
+        verifyNoMoreInteractions(bucketNameGetter);
+        verify(s3Processor).transferResource(stagingBucket, permanentBucket, id);
+        verifyNoMoreInteractions(s3Processor);
+    }
+
+    @Test
+    void permanentResourceNotFoundTest() {
+        int id = 1;
+        when(repository.read(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.permanentResource(id));
+        verify(repository).read(id);
+        verifyNoMoreInteractions(repository);
+        verifyNoMoreInteractions(bucketNameGetter);
+        verifyNoMoreInteractions(s3Processor);
+    }
+
+    @Test
+    void permanentResourceAlreadyPermanentTest() {
+        int id = 1;
+        String permanentBucket = "permanent-bucket";
+
+        FileEntity fileEntity = new FileEntity();
+        fileEntity.setId(id);
+        fileEntity.setBucket(permanentBucket);
+
+        when(repository.read(id)).thenReturn(Optional.of(fileEntity));
+        when(bucketNameGetter.getBucketForStorage(PERMANENT.getValue())).thenReturn(permanentBucket);
+
+        service.permanentResource(id);
+        verify(repository).read(id);
+        verifyNoMoreInteractions(repository);
+        verify(bucketNameGetter).getBucketForStorage(PERMANENT.getValue());
+        verifyNoMoreInteractions(bucketNameGetter);
+        verifyNoMoreInteractions(s3Processor);
+    }
 }
