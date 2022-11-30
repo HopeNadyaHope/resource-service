@@ -78,3 +78,9 @@ management:
   endpoint:
     health:
       show-details: always
+
+logstash:
+  enabled: true
+  host: ${LOGSTASH_HOST:localhost}
+  port: ${LOGSTASH_PORT:5000}
+  queue-size: 512

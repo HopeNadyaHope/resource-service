@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.epam.microservices.service.constant.StorageType.PERMANENT;
 
@@ -24,7 +25,12 @@ public class BucketNameGetter {
 
     @CircuitBreaker(name = "storageServiceCallCB", fallbackMethod = "getDefaultBucket")
     public String getBucketForStorage(String storageType) {
+        logger.info("Getting storages for storage type{}", storageType);
         List<StorageModel> storages = apiGatewayClient.getStorages();
+        String availableStorageTypes = storages.stream()
+                .map(StorageModel::getStorageType)
+                .collect(Collectors.joining(", "));
+        logger.info("Got available storages for storage types: {}", availableStorageTypes);
         return storages.stream()
                 .filter(storage -> storageType.equalsIgnoreCase(storage.getStorageType()))
                 .map(StorageModel::getBucket)

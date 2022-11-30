@@ -29,6 +29,7 @@ dependencies {
     implementation "com.amazonaws:aws-java-sdk:${aws_java_sdk_version}"
     implementation "commons-fileupload:commons-fileupload:${commons_fileupload_version}"
     implementation "commons-io:commons-io:${commons_io_version}"
+    implementation "net.logstash.logback:logstash-logback-encoder:${logstash_version}"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junit_version}"
