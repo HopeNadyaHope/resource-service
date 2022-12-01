@@ -25,12 +25,12 @@ public class BucketNameGetter {
 
     @CircuitBreaker(name = "storageServiceCallCB", fallbackMethod = "getDefaultBucket")
     public String getBucketForStorage(String storageType) {
-        logger.info("Getting storages for storage type{}", storageType);
+        logger.info("Getting storages for storage type={}", storageType);
         List<StorageModel> storages = apiGatewayClient.getStorages();
         String availableStorageTypes = storages.stream()
                 .map(StorageModel::getStorageType)
                 .collect(Collectors.joining(", "));
-        logger.info("Got available storages for storage types: {}", availableStorageTypes);
+        logger.info("Got available storages for storage type={}: [{}]", storageType, availableStorageTypes);
         return storages.stream()
                 .filter(storage -> storageType.equalsIgnoreCase(storage.getStorageType()))
                 .map(StorageModel::getBucket)
